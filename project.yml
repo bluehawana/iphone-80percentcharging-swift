@@ -13,9 +13,10 @@ settings:
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
     GENERATE_INFOPLIST_FILE: YES
-    CODE_SIGN_STYLE: Automatic
     SWIFT_EMIT_LOC_STRINGS: YES
-    # Set your Apple Developer Team ID here (or pick it in Xcode > Signing & Capabilities).
+    # Local ad-hoc signing so the app runs on THIS Mac with no Apple Developer account.
+    # To run on a real iPhone or ship to the App Store, set CODE_SIGN_STYLE = Automatic
+    # and pick your Team in Xcode > Signing & Capabilities (a free Apple ID works for device installs).
     DEVELOPMENT_TEAM: ""
 
 targets:
@@ -26,6 +27,14 @@ targets:
       - path: ChargeGuard
     settings:
       base:
+        # Local ad-hoc signing ("Sign to Run Locally") so the app runs on THIS Mac with
+        # no Apple Developer account. Overridden at target level to beat XcodeGen's default
+        # iOS "iPhone Developer" identity. To run on a real iPhone / ship to the App Store,
+        # sign into Xcode with an Apple ID and set CODE_SIGN_STYLE = Automatic + your Team.
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        "CODE_SIGN_IDENTITY[sdk=iphoneos*]": "-"
+        AD_HOC_CODE_SIGNING_ALLOWED: YES
         PRODUCT_BUNDLE_IDENTIFIER: com.bluehawana.chargeguard
         PRODUCT_NAME: ChargeGuard
         INFOPLIST_KEY_CFBundleDisplayName: "Charge Guard"
