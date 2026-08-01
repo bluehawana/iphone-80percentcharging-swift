@@ -1,0 +1,37 @@
+name: ChargeGuard
+
+options:
+  bundleIdPrefix: com.bluehawana
+  deploymentTarget:
+    iOS: "16.0"
+    macOS: "13.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    GENERATE_INFOPLIST_FILE: YES
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_EMIT_LOC_STRINGS: YES
+    # Set your Apple Developer Team ID here (or pick it in Xcode > Signing & Capabilities).
+    DEVELOPMENT_TEAM: ""
+
+targets:
+  ChargeGuard:
+    type: application
+    supportedDestinations: [iOS, macOS]
+    sources:
+      - path: ChargeGuard
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bluehawana.chargeguard
+        PRODUCT_NAME: ChargeGuard
+        INFOPLIST_KEY_CFBundleDisplayName: "Charge Guard"
+        INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.utilities"
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        # macOS: allow outbound network from the sandbox (Tuya Cloud API).
+        ENABLE_APP_SANDBOX: YES
+        ENABLE_HARDENED_RUNTIME: YES
+        CODE_SIGN_ENTITLEMENTS: ChargeGuard/ChargeGuard.entitlements
