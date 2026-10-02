@@ -11,11 +11,42 @@ enum TuyaError: LocalizedError {
         case .http(let status):
             return "Network error from Tuya (HTTP \(status))."
         case .api(let message, let code):
+            if let hint = Self.hint(forCode: code) {
+                return "Tuya API error \(code): \(message)\n\(hint)"
+            }
             return "Tuya API error \(code): \(message)"
         case .badResponse:
             return "Unexpected response from Tuya."
         case .switchCodeNotFound(let code):
             return "The plug didn't report a switch named \"\(code)\". Tap \"Detect switch code\" to find the right one."
+        }
+    }
+
+    /// True when retrying shortly afterwards has a real chance of succeeding
+    /// (plug briefly dropped off WiFi, transient network/server hiccup).
+    var isTransient: Bool {
+        switch self {
+        case .http(let status): return status >= 500 || status == 429
+        case .api(_, let code): return code == 2001
+        default: return false
+        }
+    }
+
+    /// Plain-language fix for the Tuya error codes people actually hit.
+    static func hint(forCode code: Int) -> String? {
+        switch code {
+        case 1004:
+            return "Signature rejected: wrong Access Secret or wrong Region (data center)."
+        case 1010, 1011:
+            return "Access token invalid/expired: re-check Access ID, Access Secret and Region."
+        case 1106:
+            return "Permission denied: the plug isn't linked to your Tuya cloud project. If you removed and re-added it in the Smart Life/Deltaco app (e.g. after moving), re-link the app account under Devices and check the Device ID."
+        case 2001:
+            return "The plug is OFFLINE in Tuya's cloud: it isn't connected to WiFi/internet. Re-pair it with your new WiFi (2.4 GHz) and check it works in the Smart Life/Deltaco app."
+        case 28841002:
+            return "Your Tuya IoT Core trial/subscription has expired. Renew it at iot.tuya.com → Cloud → Cloud Services → IoT Core (free extension)."
+        default:
+            return nil
         }
     }
 }
@@ -58,6 +89,40 @@ actor TuyaCloudBackend: ChargerBackend {
     }
 
     // MARK: - Discovery helpers (used by the setup UI)
+
+    /// Walks the full chain — credentials/region, device link, online state, switch code —
+    /// and reports the first broken link, so "it stopped working" can be pinned down.
+    func diagnose() async throws -> String {
+        var lines: [String] = []
+
+        _ = try await token()
+        lines.append("✅ Credentials & region (\(config.region.label)) accepted.")
+
+        let info = try await request(
+            method: "GET",
+            path: "/v1.0/devices/\(config.deviceId)",
+            body: "",
+            authenticated: true
+        )
+        try Self.assertSuccess(info)
+        guard let device = info["result"] as? [String: Any] else { throw TuyaError.badResponse }
+        let name = (device["name"] as? String) ?? config.deviceId
+        lines.append("✅ Plug \"\(name)\" is linked to your cloud project.")
+
+        guard (device["online"] as? Bool) == true else {
+            lines.append("❌ Plug is OFFLINE — Tuya can't reach it, so it can't be switched off at 80%. Re-pair it with your current WiFi (2.4 GHz) in the Smart Life/Deltaco app and make sure it has a strong signal where the charger is.")
+            return lines.joined(separator: "\n")
+        }
+        lines.append("✅ Plug is online.")
+
+        let codes = try await detectSwitchCodes()
+        if codes.contains(config.switchCode) {
+            lines.append("✅ Switch code \"\(config.switchCode)\" found. Cloud side is healthy — if it still doesn't stop at 80%, check the Shortcuts battery automation.")
+        } else {
+            lines.append("❌ Switch code \"\(config.switchCode)\" not found (device reports: \(codes.joined(separator: ", "))). Tap Detect.")
+        }
+        return lines.joined(separator: "\n")
+    }
 
     /// Returns the boolean DP codes the device exposes, so the user can pick the right one
     /// if it isn't the default "switch_1" (some plugs use "switch").

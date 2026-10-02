@@ -30,8 +30,24 @@ enum ChargerController {
         return TuyaCloudBackend(config: config)
     }
 
+    /// Retries transient failures (plug briefly off WiFi, network blip) a few times,
+    /// because the battery automation only fires once per 79→80% crossing — a single
+    /// failed request would otherwise let the phone charge to 100%.
+    /// Total wait stays well inside the background budget iOS gives an App Intent.
     static func setCharger(on: Bool) async throws {
-        try await makeBackend().setPower(on: on)
+        let backend = try makeBackend()
+        let delays: [UInt64] = [3, 7]
+        for delay in delays {
+            do {
+                try await backend.setPower(on: on)
+                return
+            } catch let error as TuyaError where error.isTransient {
+                try await Task.sleep(nanoseconds: delay * 1_000_000_000)
+            } catch let error as URLError where error.code != .cancelled {
+                try await Task.sleep(nanoseconds: delay * 1_000_000_000)
+            }
+        }
+        try await backend.setPower(on: on)
     }
 
     static func isOn() async throws -> Bool {

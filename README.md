@@ -142,6 +142,8 @@ That's it — charging now stops at ~80% automatically.
 | `sign invalid` / `1004` | Wrong Region (data center) or Access Secret. The region must match where the app account is registered. |
 | `switch code not found` | Tap **Detect**, or try `switch` instead of `switch_1`. |
 | Automation didn't fire overnight | Ensure **Ask Before Running** is OFF; battery automations only fire on a *rising* crossing, so it must go from ≤79 to ≥80 while plugged in. |
+| Worked before, charges to 100% after moving house / changing WiFi | Tap **Diagnose connection** in the app. Most common: the plug is **offline** in Tuya's cloud (not re-paired to the new WiFi, the new network is 5 GHz-only, or weak signal at the bedside); it was re-added in the Smart Life/Deltaco app and is no longer linked to your cloud project (`1106`); or the free **IoT Core** trial expired (`28841002`). |
+| Phone charges to 100% while the plug is online | Open Shortcuts → Automation and check that the *Battery Level rises above 79%* automation still exists, is enabled, and has **Run Immediately** set (not *Ask Before Running*). Turn on **Notify When Run** so you see any error. |
 | Plug off but phone still charged to 100% | The phone was already above 80% when charging started — it triggers on the *crossing*, so start the night below 80%. |
 
 ---

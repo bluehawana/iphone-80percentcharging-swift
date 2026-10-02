@@ -41,6 +41,12 @@ final class SettingsViewModel: ObservableObject {
         }
     }
 
+    func diagnose() {
+        run { backend in
+            try await backend.diagnose()
+        }
+    }
+
     func detectSwitchCode() {
         run { backend in
             let codes = try await backend.detectSwitchCodes()
@@ -131,6 +137,11 @@ struct ContentView: View {
                         vm.checkStatus()
                     } label: {
                         Label("Check plug status", systemImage: "powerplug.fill")
+                    }
+                    Button {
+                        vm.diagnose()
+                    } label: {
+                        Label("Diagnose connection", systemImage: "stethoscope")
                     }
                 }
                 .disabled(vm.isBusy)
