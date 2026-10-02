@@ -148,6 +148,17 @@ That's it — charging now stops at ~80% automatically.
 
 ---
 
+### Diagnose from a laptop (no Xcode)
+
+```bash
+./scripts/tuya-diagnose.sh        # prompts for Region, Access ID, Secret, Device ID
+./scripts/tuya-diagnose.sh off    # also switch the plug off (on to restore)
+```
+
+Runs the same checks as the app's **Diagnose connection** button using only `curl` and `openssl`.
+
+---
+
 ## Security notes
 
 - Credentials (including the Access Secret) are stored in the **Keychain**, not in
