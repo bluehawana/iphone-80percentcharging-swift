@@ -14,3 +14,5 @@ ChargeGuard.xcodeproj/
 # Secrets — never commit real Tuya credentials
 *.local
 Secrets.plist
+.env
+ChargeGuard/Core/DevCredentials.generated.swift

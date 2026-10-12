@@ -8,7 +8,19 @@ final class SettingsViewModel: ObservableObject {
     @Published var isBusy = false
 
     init() {
-        self.config = SettingsStore.load() ?? .empty
+        let saved = SettingsStore.load()
+        #if DEBUG
+        // Debug builds seed themselves from .env via DevCredentials.generated.swift.
+        // Written straight to the Keychain because the App Intents read from there,
+        // not from this view model — so the battery automation works without ever
+        // opening the app. Compiled out of release builds entirely.
+        if saved?.isComplete != true, let seeded = DevCredentials.config {
+            SettingsStore.save(seeded)
+            self.config = seeded
+            return
+        }
+        #endif
+        self.config = saved ?? .empty
     }
 
     func save() {
