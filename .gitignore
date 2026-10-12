@@ -16,3 +16,6 @@ ChargeGuard.xcodeproj/
 Secrets.plist
 .env
 ChargeGuard/Core/DevCredentials.generated.swift
+
+# Python
+__pycache__/
